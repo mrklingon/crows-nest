@@ -1,3 +1,7 @@
+namespace SpriteKind {
+    export const ast = SpriteKind.create()
+    export const stat = SpriteKind.create()
+}
 controller.up.onEvent(ControllerButtonEvent.Pressed, function () {
     speed += 1
     if (speed > 6) {
@@ -10,13 +14,25 @@ controller.B.onEvent(ControllerButtonEvent.Pressed, function () {
     pause(1000)
     setSpeed(speed)
 })
+controller.anyButton.onEvent(ControllerButtonEvent.Pressed, function () {
+    if (controller.left.isPressed() && controller.right.isPressed()) {
+        music.play(music.melodyPlayable(music.knock), music.PlaybackMode.UntilDone)
+        if (droid) {
+            droid = false
+        } else {
+            droid = true
+        }
+    }
+})
 controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
-    projectile = sprites.createProjectileFromSprite(assets.image`zap`, Enterprise, 0, -300)
-    music.play(music.melodyPlayable(music.pewPew), music.PlaybackMode.UntilDone)
-    projectile.setFlag(SpriteFlag.AutoDestroy, true)
+    blast()
 })
 controller.left.onEvent(ControllerButtonEvent.Pressed, function () {
     Enterprise.setVelocity(-20, 0)
+})
+sprites.onOverlap(SpriteKind.Player, SpriteKind.stat, function (sprite, otherSprite) {
+    sprite.startEffect(effects.rings, 500)
+    info.setLife(10)
 })
 controller.right.onEvent(ControllerButtonEvent.Released, function () {
     Enterprise.setVelocity(0, 0)
@@ -396,6 +412,10 @@ function startStars (spd: number) {
         `)
     scroller.scrollBackgroundWithSpeed(0, spd * 8, scroller.BackgroundLayer.Layer3)
 }
+sprites.onOverlap(SpriteKind.Projectile, SpriteKind.ast, function (sprite, otherSprite) {
+    sprites.destroy(otherSprite, effects.fire, 500)
+    info.changeScoreBy(50)
+})
 controller.right.onEvent(ControllerButtonEvent.Pressed, function () {
     Enterprise.setVelocity(20, 0)
 })
@@ -411,12 +431,65 @@ controller.down.onEvent(ControllerButtonEvent.Pressed, function () {
     }
     setSpeed(speed)
 })
+function blast () {
+    projectile = sprites.createProjectileFromSprite(assets.image`zap`, Enterprise, 0, -300)
+    music.play(music.melodyPlayable(music.pewPew), music.PlaybackMode.UntilDone)
+    projectile.setFlag(SpriteFlag.AutoDestroy, true)
+}
+sprites.onOverlap(SpriteKind.Player, SpriteKind.ast, function (sprite, otherSprite) {
+    sprites.destroy(otherSprite, effects.fire, 500)
+    music.play(music.melodyPlayable(music.knock), music.PlaybackMode.UntilDone)
+    scene.cameraShake(4, 500)
+    info.changeLifeBy(-1)
+})
+let station: Sprite = null
+let asteroid: Sprite = null
 let projectile: Sprite = null
 let Enterprise: Sprite = null
 let speed = 0
+let droid = false
+droid = false
+game.splash("Guide the Enterprise to destroy asteroids", "Dock with station for repairs")
 speed = 1
 startStars(1)
 Enterprise = sprites.create(assets.image`Enterprise`, SpriteKind.Player)
+controller.moveSprite(Enterprise)
 Enterprise.setPosition(77, 90)
 Enterprise.setStayInScreen(true)
-music.play(music.createSong(assets.song`test`), music.PlaybackMode.UntilDone)
+music.setVolume(80)
+info.setLife(10)
+let obs = [
+assets.image`rock1`,
+assets.image`rock0`,
+assets.image`rock2`,
+assets.image`rubbld`,
+assets.image`rubbld0`,
+assets.image`rubbld1`
+]
+forever(function () {
+    pause(500 * randint(4, 10))
+    if (speed > 0) {
+        asteroid = sprites.create(obs[randint(0, obs.length - 1)], SpriteKind.ast)
+        asteroid.setPosition(randint(20, 140), 0)
+        asteroid.setVelocity(0, speed * 100)
+        asteroid.setFlag(SpriteFlag.AutoDestroy, true)
+    }
+})
+forever(function () {
+    pause(1000 * randint(4, 10))
+    if (speed > 0) {
+        station = sprites.create(assets.image`starbase`, SpriteKind.stat)
+        station.setPosition(randint(20, 140), 0)
+        station.setVelocity(0, speed * 60)
+        station.setFlag(SpriteFlag.AutoDestroy, true)
+    }
+})
+forever(function () {
+    if (droid) {
+        Enterprise.setVelocity(randint(-60, 60), 0)
+        for (let index = 0; index < 4; index++) {
+            blast()
+            pause(100)
+        }
+    }
+})
