@@ -32,7 +32,7 @@ controller.left.onEvent(ControllerButtonEvent.Pressed, function () {
 })
 sprites.onOverlap(SpriteKind.Player, SpriteKind.stat, function (sprite, otherSprite) {
     sprite.startEffect(effects.rings, 500)
-    info.setLife(10)
+    info.setLife(3)
 })
 controller.right.onEvent(ControllerButtonEvent.Released, function () {
     Enterprise.setVelocity(0, 0)
@@ -457,7 +457,7 @@ controller.moveSprite(Enterprise)
 Enterprise.setPosition(77, 90)
 Enterprise.setStayInScreen(true)
 music.setVolume(80)
-info.setLife(10)
+info.setLife(3)
 let obs = [
 assets.image`rock1`,
 assets.image`rock0`,
@@ -467,7 +467,7 @@ assets.image`rubbld0`,
 assets.image`rubbld1`
 ]
 forever(function () {
-    pause(500 * randint(4, 10))
+    pause(250 * randint(4, 10))
     if (speed > 0) {
         asteroid = sprites.create(obs[randint(0, obs.length - 1)], SpriteKind.ast)
         asteroid.setPosition(randint(20, 140), 0)
@@ -476,7 +476,7 @@ forever(function () {
     }
 })
 forever(function () {
-    pause(1000 * randint(4, 10))
+    pause(2000 * randint(5, 10))
     if (speed > 0) {
         station = sprites.create(assets.image`starbase`, SpriteKind.stat)
         station.setPosition(randint(20, 140), 0)
